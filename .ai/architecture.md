@@ -180,6 +180,9 @@ src/
 |   |   |   `-- unit-of-work.constants.ts
 |   |   |
 |   |   |-- pagination/
+|   |   |   |-- page-request.ts
+|   |   |   |-- page-result.ts
+|   |   |   `-- index.ts
 |   |   `-- ports/
 |   |
 |   `-- common/
@@ -761,7 +764,7 @@ HTTP Response
 Example:
 
 ```text
-GET /invoices?page=1&pageSize=20
+GET /invoices?page=1&size=20
 ```
 
 does not need to use:

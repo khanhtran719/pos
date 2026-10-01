@@ -2,6 +2,7 @@ import { BadRequestException, type ArgumentsHost } from '@nestjs/common';
 import { vi } from 'vitest';
 
 import { DomainError } from '../../../domain/domain-error';
+import { ValidationException } from '../../exceptions/validation.exception';
 import { RequestContext } from '../../request-context';
 import { DomainExceptionFilter } from '../domain-exception.filter';
 
@@ -16,7 +17,10 @@ class ItemClosedError extends DomainError {
 describe('DomainExceptionFilter', () => {
   const filter = new DomainExceptionFilter();
 
-  function hostFor(response: { status: ReturnType<typeof vi.fn>; json: ReturnType<typeof vi.fn> }): ArgumentsHost {
+  function hostFor(response: {
+    status: ReturnType<typeof vi.fn>;
+    json: ReturnType<typeof vi.fn>;
+  }): ArgumentsHost {
     return {
       switchToHttp: () => ({
         getResponse: () => response,
@@ -36,6 +40,24 @@ describe('DomainExceptionFilter', () => {
       code: 'ITEM_CLOSED',
       message: 'Item is closed',
       requestId: 'req-1',
+    });
+  });
+
+  it('maps a validation exception to HTTP 400 and keeps its message', () => {
+    const response = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+
+    RequestContext.run({ requestId: 'req-2', correlationId: 'req-2' }, () => {
+      filter.catch(
+        new ValidationException('Mã PIN không được để trống.'),
+        hostFor(response),
+      );
+    });
+
+    expect(response.status).toHaveBeenCalledWith(400);
+    expect(response.json).toHaveBeenCalledWith({
+      code: 'VALIDATION',
+      message: 'Mã PIN không được để trống.',
+      requestId: 'req-2',
     });
   });
 

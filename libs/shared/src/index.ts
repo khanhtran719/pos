@@ -8,6 +8,21 @@ export type { CachePort } from './application/cache/cache.port';
 export { readThroughCache } from './application/cache/read-through-cache';
 export { UNIT_OF_WORK } from './application/unit-of-work/unit-of-work.constants';
 export type { UnitOfWork } from './application/unit-of-work/unit-of-work.port';
+export {
+  InvalidPageRequestError,
+  createPageRequest,
+  createPageResult,
+  toPageMetadata,
+  toPageWindow,
+  type PageMetadata,
+  type PageRequest,
+  type PageResult,
+  type PageWindow,
+} from './application/pagination';
+export { ValidationException } from './common/exceptions';
 export { DomainExceptionFilter } from './common/filters/domain-exception.filter';
 export { RequestContextInterceptor } from './common/interceptors/request-context.interceptor';
-export { RequestContext, type RequestContextState } from './common/request-context';
+export {
+  RequestContext,
+  type RequestContextState,
+} from './common/request-context';

@@ -16,6 +16,8 @@ export class TypeOrmUnitOfWork implements UnitOfWork {
       return work();
     }
 
-    return this.dataSource.transaction((manager) => this.context.run(manager, work));
+    return this.dataSource.transaction((manager) =>
+      this.context.run(manager, work),
+    );
   }
 }

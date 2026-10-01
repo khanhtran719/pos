@@ -1636,43 +1636,21 @@ Validation at transport boundary does not replace Domain invariants.
 
 # 59. Pagination Naming
 
-Use consistent input names.
-
-Preferred:
+pos-icool uses one application shape, in `libs/shared/src/application/pagination`:
 
 ```text
-page
-pageSize
-```
-
-or:
-
-```text
-limit
-offset
-```
-
-Choose one convention per API style.
-
-Recommended application types:
-
-```ts
 PageRequest
+    page
+    size
+
 PageResult<T>
+    items
+    page
+    size
+    total
 ```
 
-Possible fields:
-
-```ts
-page
-pageSize
-total
-items
-```
-
-Do not invent different pagination shapes per module without reason.
-
-The HTTP `metadata` object is the public pagination shape, and only a paginated API includes it. Map an internal `PageRequest` / `PageResult` onto:
+`createPageRequest` accepts integers greater than or equal to 1. `toPageWindow` returns `offset` and `limit` for the query. `toPageMetadata` maps a `PageResult` to HTTP `metadata`:
 
 ```text
 page
@@ -1682,7 +1660,7 @@ lastPage
 next
 ```
 
-`metadata` sits beside `data`. Do not put it inside `data`, and do not send `pageSize` or `items` as the wire shape. See `docs/project-profile.md`.
+An empty result uses `lastPage` 1 and `next` false. `items` is the `data` array. `metadata` sits beside `data`. Do not invent another pagination shape per module, and do not send `pageSize` or `items` on the wire. See `docs/project-profile.md`.
 
 ---
 
