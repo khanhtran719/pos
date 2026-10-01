@@ -30,7 +30,7 @@ A write use case makes its transaction boundary visible. Domain behavior validat
 
 ## Data and operations
 
-Each deployable app owns its PostgreSQL database. This repository has no migration program; see the [project profile](../docs/project-profile.md). Redis may cache or coordinate with an explicit failure policy when used. External systems are accessed through application ports and infrastructure adapters. HTTP, Kafka, worker, and scheduler entry points, when present, share the same application and domain rules. Authentication, authorization, error mapping, logging, metrics, tracing, and health checks belong at their appropriate boundaries.
+Each deployable app owns its PostgreSQL database. This repository has no migration program; see the [project profile](../docs/project-profile.md). Redis may cache or coordinate with an explicit failure policy when used. External systems are accessed through application ports and infrastructure adapters. HTTP, Kafka, worker, and scheduler entry points, when present, share the same application and domain rules. Authentication, authorization, error mapping, logging, metrics, tracing, and health checks belong at their appropriate boundaries. API bodies use `{ data, errorCode, message, status }`. `metadata` is included only for a paginated API. `/live` and `/ready` stay outside that envelope. See the [project profile](../docs/project-profile.md).
 
 ## Start here
 

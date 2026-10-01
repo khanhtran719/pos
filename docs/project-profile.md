@@ -63,7 +63,42 @@ REDIS_PORT
 REDIS_PASSWORD
 ```
 
-`/live` checks the process only. `/ready` treats PostgreSQL as a critical dependency. Optional dependencies must not be added to readiness by default.
+`/live` checks the process only. `/ready` treats PostgreSQL as a critical dependency. Optional dependencies must not be added to readiness by default. Both stay outside the API response envelope and return `{ "status": "ok" }`.
+
+## HTTP response
+
+An API response body uses these fields:
+
+```json
+{
+  "data": null,
+  "errorCode": null,
+  "message": null,
+  "status": true
+}
+```
+
+`data` is the response DTO, an array of those DTOs, or `null`. `status` is a boolean: `true` on success and `false` on failure. On success `errorCode` is `null`. On failure `data` is `null`, and `errorCode` and `message` both carry the same safe client text. Clients already read `errorCode` as that text. A stable domain name such as `InvoiceAlreadyPaidError` stays on the error class. It is not a body field, and the body has no `code` or `requestId`.
+
+`metadata` is present only on a paginated API. It is a sibling of `data`, not a property inside `data`. A non-paginated response omits `metadata`.
+
+```json
+{
+  "data": [],
+  "metadata": {
+    "page": 1,
+    "size": 10,
+    "total": 0,
+    "lastPage": 1,
+    "next": false
+  },
+  "errorCode": null,
+  "message": null,
+  "status": true
+}
+```
+
+`page`, `size`, `total`, and `lastPage` are numbers. `next` is a boolean. This envelope is the local contract. It replaces the `{ code, message, requestId }` example in `.ai/architecture.md` §46 and the wire code in `.ai/rules.md` R-35.
 
 ## Local deployment
 

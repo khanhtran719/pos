@@ -740,9 +740,9 @@ When adding or changing an HTTP endpoint:
 
 4. Call one clear application use case/query.
 
-5. Map result to response DTO.
+5. Map result to response DTO. That DTO is `data` in `{ data, errorCode, message, status }`. Add `metadata` only when the endpoint is paginated.
 
-6. Map errors at presentation boundary.
+6. Map errors at the presentation boundary onto the same envelope. See `docs/project-profile.md`.
 
 7. Add/update E2E tests where valuable.
 ```

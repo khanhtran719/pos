@@ -857,6 +857,8 @@ export class InvoiceController {
 
 Controller must remain thin.
 
+The returned DTO is `data`. The HTTP body is `{ data, errorCode, message, status }`. Add `metadata` only when the handler is paginated. See `docs/project-profile.md`.
+
 ---
 
 # 19. Request DTO Template
@@ -898,6 +900,8 @@ export class PayInvoiceResponseDto {
 
 Do not return ORM Entities directly.
 
+`PayInvoiceResponseDto` is the `data` value, not the HTTP body.
+
 ---
 
 # 21. Response Mapper Template
@@ -926,7 +930,7 @@ export class InvoiceResponseMapper {
 }
 ```
 
-HTTP response mapping belongs to Presentation.
+HTTP response mapping belongs to Presentation. The mapper builds `data`. The envelope around it is `{ data, errorCode, message, status }`, with `metadata` only for a paginated API.
 
 Do not reuse Persistence Mapper here.
 
@@ -1640,9 +1644,11 @@ Presentation:
 
 ```text
 InvoiceAlreadyPaidError
-    -> HTTP 409
-    -> INVOICE_ALREADY_PAID
+    -> HTTP status
+    -> { data: null, errorCode, message, status: false }
 ```
+
+`errorCode` and `message` are the same safe client text. The class name is not a body field. `metadata` is omitted unless the API is paginated. See `docs/project-profile.md`.
 
 Keep HTTP exceptions out of Domain.
 

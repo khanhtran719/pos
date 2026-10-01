@@ -660,6 +660,8 @@ async pay(
 }
 ```
 
+`PayInvoiceResponseDto` is the `data` value. The HTTP body is the envelope in §46, not the DTO alone.
+
 Use case:
 
 ```ts
@@ -1124,8 +1126,10 @@ Application
 Presentation Exception Mapper
     |
     v
-HTTP Status + Error Code + Safe Message
+HTTP status + response envelope
 ```
+
+The body is `{ data, errorCode, message, status }`. Add `metadata` only when the API is paginated. Field rules are in the [project profile](../docs/project-profile.md). Do not respond with `{ code, message, requestId }`.
 
 Example Domain error:
 
@@ -1137,9 +1141,11 @@ Presentation mapping:
 
 ```text
 InvoiceAlreadyPaidError
-    -> HTTP 409
-    -> INVOICE_ALREADY_PAID
+    -> HTTP status
+    -> { data: null, errorCode, message, status: false }
 ```
+
+`errorCode` and `message` are the same safe client text. `InvoiceAlreadyPaidError` is the domain class name, not a body field.
 
 Do not throw:
 
@@ -2324,7 +2330,15 @@ Response Mapper
         |
         v
 Response DTO
+        |
+        v
+HTTP envelope
+    data = Response DTO
+    metadata only for a paginated API
+    errorCode, message, status
 ```
+
+The response DTO is `data`. It is not the HTTP body. The envelope is `{ data, errorCode, message, status }`, plus `metadata` only for a paginated API. See the [project profile](../docs/project-profile.md).
 
 This prevents database schema changes from accidentally changing API contracts.
 
@@ -2359,18 +2373,23 @@ InvoiceAlreadyPaidError
 Exception Mapper
         |
         v
-HTTP 409
+HTTP status + response envelope
 ```
 
-Recommended response shape:
+Response body:
 
 ```json
 {
-  "code": "INVOICE_ALREADY_PAID",
+  "data": null,
+  "errorCode": "Invoice has already been paid",
   "message": "Invoice has already been paid",
-  "requestId": "..."
+  "status": false
 }
 ```
+
+`metadata` is omitted here because this response is not paginated. On success, `data` is the response DTO, `errorCode` is `null`, and `status` is `true`. A paginated success adds `metadata` beside `data` with `page`, `size`, `total`, `lastPage`, and `next`. Do not nest `metadata` inside `data`.
+
+`requestId` belongs to request context and logs (see §13J and §50). It is not a response field. The domain class name is not a response field. Full field rules are in the [project profile](../docs/project-profile.md).
 
 ---
 

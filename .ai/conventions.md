@@ -883,6 +883,8 @@ PayInvoiceResponseDto
 
 Do not suffix every nested response object with `Dto` if a simple exported type provides better readability.
 
+These types are the `data` payload. The HTTP body is `{ data, errorCode, message, status }`, plus `metadata` only for a paginated API. See `docs/project-profile.md`.
+
 ---
 
 # 29. Response Mapper Naming
@@ -1209,9 +1211,9 @@ PROMOTION_NOT_APPLICABLE
 SHIFT_ALREADY_CLOSED
 ```
 
-Error codes are contracts.
+These names identify domain error classes. They are not HTTP body fields. The body uses `errorCode` and `message` for the same safe client text, plus `data` and `status`. See `docs/project-profile.md`.
 
-Do not casually rename them.
+Do not casually rename a domain error class that callers already depend on.
 
 ---
 
@@ -1669,6 +1671,18 @@ items
 ```
 
 Do not invent different pagination shapes per module without reason.
+
+The HTTP `metadata` object is the public pagination shape, and only a paginated API includes it. Map an internal `PageRequest` / `PageResult` onto:
+
+```text
+page
+size
+total
+lastPage
+next
+```
+
+`metadata` sits beside `data`. Do not put it inside `data`, and do not send `pageSize` or `items` as the wire shape. See `docs/project-profile.md`.
 
 ---
 
@@ -2880,7 +2894,7 @@ Do not expose arbitrary internal application classes merely because another modu
 
 # 120. API Contract Stability
 
-Request DTOs, Response DTOs, event schemas, and external error codes are public contracts.
+Request DTOs, the response envelope (`data`, `errorCode`, `message`, `status`, and `metadata` only for a paginated API), event schemas, and domain error class names are public contracts.
 
 Changes to them must be deliberate.
 
@@ -3109,7 +3123,7 @@ External API messages should be safe and stable enough for clients.
 
 Do not embed sensitive data in error messages.
 
-Use error codes for machine-readable client handling.
+Clients read `errorCode`, `message`, and `status` on the response envelope. Do not add a separate `code` field. `metadata` is only for a paginated API.
 
 ---
 

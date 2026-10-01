@@ -1010,6 +1010,8 @@ Domain/Application Result
     -> Response DTO
 ```
 
+The response DTO is the `data` field of the HTTP envelope. The body is `{ data, errorCode, message, status }`. Include `metadata` only when the API is paginated. See `.ai/architecture.md` §46 and `docs/project-profile.md`.
+
 Database schema and API contract must remain independently evolvable.
 
 ---
@@ -1028,9 +1030,11 @@ Presentation maps:
 
 ```text
 InvoiceAlreadyPaidError
-    -> HTTP 409
-    -> INVOICE_ALREADY_PAID
+    -> HTTP status
+    -> { data: null, errorCode, message, status: false }
 ```
+
+`errorCode` and `message` are the same safe client text. The domain class name is not a body field. There is no `code` or `requestId` field. `metadata` is included only for a paginated API. See `.ai/architecture.md` §46 and `docs/project-profile.md`.
 
 ### MUST NOT
 
