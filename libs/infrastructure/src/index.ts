@@ -15,3 +15,7 @@ export {
 export { DatabaseModule } from './database/database.module';
 export { TypeOrmRepositoryProvider } from './database/transaction/typeorm-repository-provider';
 export { HealthModule } from './health/health.module';
+export {
+  configureHttpApplication,
+  type HttpApplicationOptions,
+} from './http/configure-http-application';

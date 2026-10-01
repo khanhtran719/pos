@@ -1,7 +1,7 @@
 # Module Template
 
 > **Status:** Illustrative module blueprint.  
-> The named domains, fields, tables, and code snippets are teaching examples. Follow [rules](rules.md), [architecture](architecture.md), and the [project profile](../docs/project-profile.md) for required behavior; adapt each example to the actual MSSQL schema during v1 migration.  
+> The named domains, fields, tables, and code snippets are teaching examples. Follow [rules](rules.md), [architecture](architecture.md), and the [project profile](../docs/project-profile.md) for required behavior; adapt each example to the actual owning module and PostgreSQL schema.  
 > Read the task-specific guidance in [AGENTS.md](../AGENTS.md). Related documents:
 >
 > - `AGENTS.md`
@@ -636,7 +636,7 @@ Keep it in infrastructure.
 
 Files:
 
-The `uuid` IDs and sample table names below are illustrative. For each v1 API slice, map the actual MSSQL key type and table/column meanings; do not change legacy IDs to match this example.
+The `uuid` IDs and sample table names below are illustrative. For each API slice, map the actual PostgreSQL key type and table/column meanings; do not change established IDs merely to match this example.
 
 ```text
 infrastructure/persistence/typeorm/entities/invoice.orm-entity.ts
@@ -798,7 +798,7 @@ export class TypeOrmInvoiceRepository implements InvoiceRepository {
 }
 ```
 
-This payment collection is append-only. For mutable or removable children, define explicit delete/update semantics before reusing this repository pattern. Integration tests must verify round-trip mapping, rollback, and concurrent locking on the project's MSSQL schema. Do not cache a transaction-aware repository in a constructor.
+This payment collection is append-only. For mutable or removable children, define explicit delete/update semantics before reusing this repository pattern. Integration tests must verify round-trip mapping, rollback, and concurrent locking on the project's PostgreSQL schema. Do not cache a transaction-aware repository in a constructor.
 
 ---
 
@@ -1138,7 +1138,7 @@ export interface InboxPort {
 }
 ```
 
-On MSSQL, give `event_id` a unique constraint and implement `tryClaim` as an atomic claim inside the active transaction. The infrastructure adapter must serialize concurrent claims and return `false` for an already claimed ID without running the business effect. Keep lock hints and duplicate-key handling inside that adapter; test them against real MSSQL.
+On PostgreSQL, give `event_id` a unique constraint and implement `tryClaim` as an atomic claim inside the active transaction. The infrastructure adapter must serialize concurrent claims and return `false` for an already claimed ID without running the business effect. Keep locking and duplicate-key handling inside that adapter; test them against real PostgreSQL.
 
 ```ts
 @Injectable()
@@ -1167,7 +1167,7 @@ export class InvoicePaidConsumer {
 }
 ```
 
-InboxPort.tryClaim must use the active transaction-scoped EntityManager. The MSSQL adapter must use a unique event ID and an atomic claim; if business work throws, both the claim and business change roll back. Concurrent duplicate deliveries must not both execute the business operation.
+InboxPort.tryClaim must use the active transaction-scoped EntityManager. The PostgreSQL adapter must use a unique event ID and an atomic claim; if business work throws, both the claim and business change roll back. Concurrent duplicate deliveries must not both execute the business operation.
 
 Do not place non-transactional external side effects inside this transaction. Those need their own idempotency contract or outbox workflow. Test concurrent duplicate delivery, rollback then redelivery, and ACK after commit.
 
@@ -1904,7 +1904,7 @@ Transaction participation
 Queries
 ```
 
-Prefer real MSSQL/Testcontainers.
+Prefer real PostgreSQL/Testcontainers.
 
 ---
 

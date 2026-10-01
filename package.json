@@ -16,6 +16,7 @@
     "start:kpos": "nest start kpos",
     "start:kpos:dev": "nest start kpos --watch",
     "lint": "eslint .",
+    "quality": "bash quality-gates/ci-check.sh",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

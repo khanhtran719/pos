@@ -1,6 +1,6 @@
 # NestJS Modular Monolith Overview
 
-> Map for 360 Customer v2. Normative constraints live in [rules](rules.md), execution contracts in [architecture](architecture.md), code shape in [conventions](conventions.md), process in [workflow](workflow.md), and local facts in the [project profile](../docs/project-profile.md). Named business domains in examples are illustrative.
+> Map for pos-icool. Normative constraints live in [rules](rules.md), execution contracts in [architecture](architecture.md), code shape in [conventions](conventions.md), process in [workflow](workflow.md), and local facts in the [project profile](../docs/project-profile.md). Named business domains in examples are illustrative.
 
 ## System shape
 

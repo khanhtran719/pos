@@ -3,7 +3,7 @@
 > **Status:** Canonical enforcement rules.  
 > The full rule detail is retained. For execution flows and rationale, read [architecture](architecture.md). [AGENTS.md](../AGENTS.md) owns task routing and document precedence.
 
-> **Project context:** pos-icool uses PostgreSQL and has no v1 migration. [Project profile](../docs/project-profile.md) wins over R-62 and any MSSQL migration wording below. Named Invoice and other examples do not define this project's domain. Redis and Kafka rules apply when those integrations are used.
+> **Project context:** pos-icool uses PostgreSQL and has no schema migration program. Named Invoice and other examples do not define this project's domain. Redis and Kafka rules apply when those integrations are used. See the [project profile](../docs/project-profile.md) for adopted local decisions.
 
 ---
 
@@ -180,7 +180,7 @@ Domain MUST NOT depend on:
 ```text
 NestJS
 TypeORM
-MSSQL
+database drivers
 Redis
 Kafka
 HTTP
@@ -714,7 +714,7 @@ unitOfWork.transaction(async () => {
 });
 ```
 
-Kafka does not participate in the MSSQL transaction.
+Kafka does not participate in the database transaction.
 
 An outbox publisher MUST tolerate crash/retry and duplicate publication, claim rows safely across workers, mark delivery after broker acknowledgement, and expose bounded retry, parked records, replay, and backlog age. If aggregate order is required, define and test an ordering key and publishing policy.
 
@@ -1245,7 +1245,7 @@ repository.findForUpdate(id);
 Infrastructure implements:
 
 ```text
-MSSQL row lock via Infrastructure
+PostgreSQL row lock via Infrastructure
 pessimistic_write
 ```
 
@@ -1364,7 +1364,7 @@ Application
     -> Use-case tests
 
 Repositories
-    -> Integration tests with real MSSQL
+    -> Integration tests with real PostgreSQL
 
 Kafka / Redis
     -> Integration tests
@@ -1655,17 +1655,17 @@ Use the simplest implementation that still respects the architecture.
 
 ---
 
-## 62. Customer v2 Migration Rule (R-62)
+## 62. Database Evolution Rule (R-62)
 
 ### MUST
 
-- During v1 API migration, use the existing MSSQL database as the source of truth. Preserve v1's observable endpoint behavior unless a separate contract change is approved and documented.
-- For each migrated route, designate one active handler. Record v1/v2 write ownership of the affected tables; if both versions may write the same rows, define and test shared invariants, isolation/locks, and side effects. Keep schema changes backward-compatible with both live versions through rollout and rollback.
-- Keep database-specific types, SQL, schema mapping, migrations, locks, and error translation in Infrastructure. Verify transaction, repository, and concurrency behavior against real MSSQL.
-- Treat the later PostgreSQL cutover as a schema, data, adapter, and verification migration with a rollback plan.
+- Keep PostgreSQL-specific types, SQL, schema mapping, locks, and error translation in Infrastructure.
+- Keep TypeORM `synchronize` disabled in every non-test runtime.
+- Treat adoption of a migration toolchain as an architecture change: define ownership, forward/rollback procedure, deployment ordering, and integration verification before adding migration files.
+- Verify repository, transaction, and concurrency behavior against real PostgreSQL where the behavior depends on the database.
 
 ### MUST NOT
 
-- Add MySQL as a migration-phase dependency or infer it from stale repository documentation.
-- Assume changing `DB_TYPE` alone moves data or preserves SQL/locking behavior.
-- Bulk-copy v1 controllers or change several unrelated API contracts in one migration slice.
+- Add a `migrations/` tree or TypeORM CLI data source as part of ordinary feature work while the project has no adopted migration program.
+- Assume changing configuration alone moves data or preserves SQL/locking behavior.
+- Put database-specific behavior in Domain or Application code.

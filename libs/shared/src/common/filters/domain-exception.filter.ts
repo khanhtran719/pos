@@ -9,6 +9,7 @@ import {
 import type { Response } from 'express';
 
 import { DomainError } from '../../domain/domain-error';
+import { ErrorCategory } from '../../domain/error-category';
 import { RequestContext } from '../request-context';
 
 interface ErrorBody {
@@ -44,7 +45,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
   private toBody(exception: unknown): { status: number; payload: ErrorBody } {
     if (exception instanceof DomainError) {
       return {
-        status: HttpStatus.BAD_REQUEST,
+        status: domainErrorStatus(exception.category),
         payload: errorBody(exception.message),
       };
     }
@@ -61,6 +62,20 @@ export class DomainExceptionFilter implements ExceptionFilter {
       payload: errorBody('Internal server error'),
     };
   }
+}
+
+function domainErrorStatus(category: ErrorCategory): HttpStatus {
+  const statuses: Record<ErrorCategory, HttpStatus> = {
+    [ErrorCategory.BadInput]: HttpStatus.BAD_REQUEST,
+    [ErrorCategory.Unauthorized]: HttpStatus.UNAUTHORIZED,
+    [ErrorCategory.Forbidden]: HttpStatus.FORBIDDEN,
+    [ErrorCategory.NotFound]: HttpStatus.NOT_FOUND,
+    [ErrorCategory.Conflict]: HttpStatus.CONFLICT,
+    [ErrorCategory.BusinessRule]: HttpStatus.UNPROCESSABLE_ENTITY,
+    [ErrorCategory.RateLimited]: HttpStatus.TOO_MANY_REQUESTS,
+  };
+
+  return statuses[category];
 }
 
 function errorBody(message: string): ErrorBody {

@@ -2,12 +2,14 @@ import { BadRequestException, type ArgumentsHost, Logger } from '@nestjs/common'
 import { vi } from 'vitest';
 
 import { DomainError } from '../../../domain/domain-error';
+import { ErrorCategory } from '../../../domain/error-category';
 import { ValidationException } from '../../exceptions/validation.exception';
 import { RequestContext } from '../../request-context';
 import { DomainExceptionFilter } from '../domain-exception.filter';
 
 class ItemClosedError extends DomainError {
   readonly code = 'ITEM_CLOSED';
+  readonly category = ErrorCategory.Conflict;
 
   constructor() {
     super('Item is closed');
@@ -36,13 +38,38 @@ describe('DomainExceptionFilter', () => {
       filter.catch(new ItemClosedError(), hostFor(response));
     });
 
-    expect(response.status).toHaveBeenCalledWith(400);
+    expect(response.status).toHaveBeenCalledWith(409);
     expect(response.json).toHaveBeenCalledWith({
       data: null,
       errorCode: 'Item is closed',
       message: 'Item is closed',
       status: false,
     });
+  });
+
+  it.each([
+    [ErrorCategory.BadInput, 400],
+    [ErrorCategory.Unauthorized, 401],
+    [ErrorCategory.Forbidden, 403],
+    [ErrorCategory.NotFound, 404],
+    [ErrorCategory.Conflict, 409],
+    [ErrorCategory.BusinessRule, 422],
+    [ErrorCategory.RateLimited, 429],
+  ])('maps the transport-neutral %s category to HTTP %i', (category, status) => {
+    class CategorizedError extends DomainError {
+      readonly code = 'CATEGORIZED_ERROR';
+      readonly category = category;
+
+      constructor(message: string) {
+        super(message);
+      }
+    }
+
+    const response = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+
+    filter.catch(new CategorizedError('categorized error'), hostFor(response));
+
+    expect(response.status).toHaveBeenCalledWith(status);
   });
 
   it('maps a validation exception to HTTP 400 and keeps its message', () => {

@@ -1,6 +1,6 @@
 # Project profile
 
-Local decisions for pos-icool. On stack and migration, this file wins over template wording in `.ai/` (see `AGENTS.md` instruction order).
+Adopted local decisions for pos-icool. This profile remains consistent with the canonical rules and architecture routed by `AGENTS.md`.
 
 ## Deployable apps
 
@@ -34,12 +34,6 @@ If Redis is down, `CachePort.get` behaves as a miss and `set` / `invalidate` log
 ## Database
 
 PostgreSQL is the source of truth. There is no v1 schema and no migration toolchain.
-
-Do not apply these template sections here:
-
-- `.ai/rules.md` R-62
-- `.ai/architecture.md` migration phases in §63
-- repository integration tests aimed at MSSQL
 
 `synchronize` is `false`. Schema changes are applied outside this repository until a migration approach is chosen. Do not add `migrations/` or a TypeORM CLI data source as part of ordinary feature work.
 

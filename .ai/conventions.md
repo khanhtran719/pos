@@ -2105,7 +2105,7 @@ Do not mock the internal implementation details of the Application class under t
 
 # 80. Repository Test Convention
 
-Repository implementations should be tested against real MSSQL where practical.
+Repository implementations should be tested against real PostgreSQL where practical.
 
 Prefer:
 
@@ -2564,7 +2564,7 @@ Keep it localized.
 
 Use parameter binding.
 
-Document non-obvious MSSQL-specific behavior.
+Document non-obvious PostgreSQL-specific behavior.
 
 Add integration tests.
 
@@ -3445,7 +3445,7 @@ Examples:
 
 ```text
 app
-mssql
+postgres
 redis
 kafka
 ```

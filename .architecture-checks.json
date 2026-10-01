@@ -1,0 +1,37 @@
+{
+  "sourceRoots": ["apps", "libs"],
+  "moduleRoots": [
+    "apps/central/src/modules",
+    "apps/ipos/src/modules",
+    "apps/kpos/src/modules"
+  ],
+  "sharedRoots": ["libs/shared/src"],
+  "infrastructureRoots": ["libs/infrastructure/src"],
+  "appsDir": "apps",
+  "publicCrossModulePrefixes": [
+    "application/facades/",
+    "application/ports/",
+    "application/queries/",
+    "public/"
+  ],
+  "excludedFileNames": [".spec.ts", ".test.ts", ".e2e-spec.ts"],
+  "legacyUnitTests": [],
+  "domainForbiddenPackages": [
+    "@nestjs/",
+    "typeorm",
+    "ioredis",
+    "redis",
+    "kafkajs",
+    "axios",
+    "express",
+    "fastify"
+  ],
+  "applicationForbiddenPackages": [
+    "typeorm",
+    "@nestjs/typeorm",
+    "ioredis",
+    "redis",
+    "kafkajs",
+    "axios"
+  ]
+}

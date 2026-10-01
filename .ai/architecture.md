@@ -4,14 +4,14 @@
 > This file owns the detailed API, worker, transaction, and integration flows. The concise enforceable catalog is in [rules](rules.md); [AGENTS.md](../AGENTS.md) defines document precedence and task routing.  
 > When implementation and this document conflict, identify the cause and deliberately update the implementation or the owning rule. Never silently break an architectural boundary.
 
-> **Project context:** This is the target architecture for 360 Customer v2. v1 and migration-phase v2 use MSSQL; PostgreSQL follows through a separate schema/data migration. Invoice, Store, Loyalty, POS, vendor names, routes, and sample values remain illustrative. Kafka and Redis sections apply when those integrations are selected. See the [project profile](../docs/project-profile.md) for current implementation gaps.
+> **Project context:** This is the target architecture for pos-icool. PostgreSQL is the source of truth and the repository currently has no schema migration program. Invoice, Store, Loyalty, POS, vendor names, routes, and sample values remain illustrative. Kafka and Redis sections apply when those integrations are selected. See the [project profile](../docs/project-profile.md) for adopted local decisions.
 
 
 ## 1. Purpose
 
-This document defines the target architecture for the 360 Customer v2 NestJS modular monolith.
+This document defines the target architecture for the three pos-icool NestJS modular monoliths: `central`, `ipos`, and `kpos`.
 
-During API migration, v2 uses the same MSSQL database as v1. The later PostgreSQL cutover is a separate migration of schema, data, Infrastructure adapters, SQL/locking behavior, and operational procedures. Domain and Application contracts should survive that cutover, but database behavior must be verified again. The checked-in MSSQL adapter and entity metadata still require verification against the actual v1 schema; see the [project profile](../docs/project-profile.md).
+PostgreSQL is the source of truth. Database-specific schema mapping, SQL, locking behavior, and error translation stay in Infrastructure and are verified against the actual PostgreSQL behavior. The project does not currently own a migration toolchain; adopting one requires an explicit architecture decision and operational contract. See the [project profile](../docs/project-profile.md).
 
 The reference model combines:
 
@@ -95,7 +95,7 @@ The diagram below is a reference deployment with optional Redis and Kafka capabi
           +--------------+--------------+
           |              |              |
           v              v              v
-      MSSQL       Redis          Kafka
+    PostgreSQL     Redis          Kafka
        Cluster         Cluster        Cluster
 ```
 
@@ -385,7 +385,7 @@ Domain code must not depend on:
 ```text
 NestJS
 TypeORM
-MSSQL
+database drivers
 Redis
 Kafka
 HTTP
@@ -550,7 +550,7 @@ return this.unitOfWork.transaction(async () => {
 Application code must not know that the implementation uses:
 
 ```text
-MSSQL
+PostgreSQL
 TypeORM
 EntityManager
 QueryRunner
@@ -1012,7 +1012,7 @@ Do not default to:
 ```text
 BEGIN
 
-MSSQL row lock via Infrastructure
+PostgreSQL row lock via Infrastructure
 
 HTTP call 5-10 seconds
 
@@ -1158,7 +1158,7 @@ throw new ConflictException();
 
 from Domain code.
 
-Technical errors such as MSSQL connection failures must not expose raw messages, SQL, or stack traces to production clients.
+Technical errors such as PostgreSQL connection failures must not expose raw messages, SQL, or stack traces to production clients.
 
 ---
 
@@ -1667,7 +1667,7 @@ Cross module:
 
 Avoiding ORM object relationships does not mean avoiding database integrity.
 
-Foreign keys may remain in MSSQL migrations.
+Foreign keys remain valid PostgreSQL integrity constraints even though ORM object relationships are avoided across modules.
 
 Example:
 
@@ -2014,7 +2014,7 @@ return this.unitOfWork.transaction(async () => {
 });
 ```
 
-Kafka does not participate in the MSSQL transaction.
+Kafka does not participate in the database transaction.
 
 Use:
 
@@ -2053,7 +2053,7 @@ Kafka
 ```text
 Outbox Table
     |
-SQL Server CDC, when enabled
+PostgreSQL logical decoding or CDC, when enabled
     |
 Debezium
     |
@@ -2062,7 +2062,7 @@ Kafka
 
 Application code must not depend on which implementation is used.
 
-For a worker publisher, multiple workers must claim rows without publishing the same claim concurrently. Use an atomic MSSQL claim and a short database transaction to acquire a lease, then commit the claim before broker I/O; keep lock hints inside Infrastructure and verify concurrent workers against real MSSQL. Publish using the stable event ID, then mark the row delivered only after broker acknowledgement. A crash after publish but before that mark can produce a duplicate: the contract is **at least once**, and consumers must tolerate it. An expired lease must make the row retryable.
+For a worker publisher, multiple workers must claim rows without publishing the same claim concurrently. Use an atomic PostgreSQL claim and a short database transaction to acquire a lease, then commit the claim before broker I/O; keep locking details inside Infrastructure and verify concurrent workers against real PostgreSQL. Publish using the stable event ID, then mark the row delivered only after broker acknowledgement. A crash after publish but before that mark can produce a duplicate: the contract is **at least once**, and consumers must tolerate it. An expired lease must make the row retryable.
 
 Define bounded retry/backoff, a parked or dead-letter state for poison records, and a controlled replay procedure. If order matters within an aggregate, assign a sequence or equivalent ordering key and preserve that order through claim and broker partitioning; do not promise global order. Observe pending count, oldest pending age, retries, parked records, and commit-to-publish latency. CDC deployments need equivalent recovery, duplicate, and observability guarantees.
 
@@ -2623,7 +2623,7 @@ invoiceRepository.findForUpdate(id);
 Infrastructure may implement:
 
 ```text
-MSSQL row lock via Infrastructure
+PostgreSQL row lock via Infrastructure
 pessimistic_write
 ```
 
@@ -2643,7 +2643,7 @@ Application
  -> Use-case tests
 
 Repositories
- -> Integration tests with real MSSQL
+ -> Integration tests with real PostgreSQL
 
 Kafka / Redis
  -> Integration tests
@@ -2683,7 +2683,7 @@ These tests should remain fast.
 
 Do not mock TypeORM to prove a TypeORM repository works.
 
-Repository implementations should be tested against a real MSSQL instance where practical.
+Repository implementations should be tested against a real PostgreSQL instance where practical.
 
 Testcontainers or equivalent isolated integration environments are preferred.
 
@@ -2742,78 +2742,20 @@ Application/domain code must not contain database failover awareness. pos-icool 
 
 ---
 
-# 63. Migration Strategy
+# 63. Schema Evolution Strategy
 
-pos-icool has no migration program. Do not add a `migrations/` tree, a TypeORM migration data source, or MSSQL compatibility for this repository. The phases below remain reference material for a future adopted-standard migration and are not work in this codebase.
+pos-icool currently has no repository-owned schema migration program. Keep TypeORM `synchronize` disabled. Do not add a `migrations/` tree or TypeORM CLI data source during ordinary API work.
 
-Existing codebases should not use a big-bang migration.
+Before adopting schema migrations, approve and document:
 
-Recommended sequence:
+1. Which team and deployable owns each schema.
+2. The migration tool and source-of-truth directory.
+3. Forward, rollback, and compatibility rules for rolling deployments.
+4. Deployment ordering across application and schema changes.
+5. Real PostgreSQL integration tests for constraints, mapping, locks, and concurrent behavior.
+6. Backup, restore, observability, and operator runbooks.
 
-## Phase 1
-
-Introduce:
-
-```text
-UnitOfWork port
-TypeOrmUnitOfWork
-TypeOrmTransactionContext
-TypeOrmRepositoryProvider
-```
-
-Keep current entity locations temporarily.
-
-## Phase 2
-
-Remove `EntityManager` and `DataSource.transaction()` from business/application code.
-
-Convert:
-
-```ts
-unitOfWork.transaction(async manager => {
-  ...
-});
-```
-
-into:
-
-```ts
-unitOfWork.transaction(async () => {
-  await repository.save(...);
-});
-```
-
-## Phase 3
-
-Move repositories into owning modules.
-
-## Phase 4
-
-Move ORM entities into owning modules.
-
-## Phase 5
-
-Remove direct cross-module repository access.
-
-## Phase 6
-
-Reduce cross-module ORM relations.
-
-## Phase 7
-
-Introduce domain/ORM separation selectively.
-
-## Phase 8
-
-Introduce Transactional Outbox.
-
-## Phase 9
-
-Introduce CQRS-lite for reporting/read-heavy use cases.
-
-## Phase 10
-
-Strengthen observability, resilience, security, and worker boundaries.
+Until that decision is adopted, schema changes are an external operational dependency and must be called out explicitly in the task and release notes.
 
 ---
 
@@ -2896,7 +2838,7 @@ Agents MUST NOT:
 - Access another module's ORM entity directly.
 - Create one Nest module per database table.
 - Keep all entities in a global `database/entities` directory.
-- Publish Kafka directly inside a MSSQL transaction.
+- Publish Kafka directly inside a database transaction.
 - Use Redis as an undeclared source of truth.
 - Add retries blindly to non-idempotent external operations.
 - Put domain-specific helpers into global `common`.
@@ -3131,7 +3073,7 @@ This code should not need to know that the runtime implementation involves:
 ```text
 TypeORM
 EntityManager
-MSSQL
+PostgreSQL
 Invoice tables
 Payment tables
 Outbox table

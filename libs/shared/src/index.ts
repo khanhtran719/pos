@@ -22,9 +22,12 @@ export {
   type PaginatedApiSuccessResponse,
 } from './common/interceptors/api-response.interceptor';
 export { RequestContextInterceptor } from './common/interceptors/request-context.interceptor';
+export { createGlobalValidationPipe } from './common/pipes';
 export { RequestContext, type RequestContextState } from './common/request-context';
 export { AggregateRoot } from './domain/aggregate-root';
 export { DomainError } from './domain/domain-error';
 export { DomainEvent } from './domain/domain-event';
 export { Entity } from './domain/entity';
+export * from './domain/enums';
+export { ErrorCategory } from './domain/error-category';
 export { ValueObject } from './domain/value-object';

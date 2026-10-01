@@ -3,7 +3,7 @@
 > **Status:** Canonical agent operating procedure.  
 > This file owns the detailed work process. [Rules](rules.md) own enforceable boundaries, [architecture](architecture.md) owns execution flows, and [AGENTS.md](../AGENTS.md) owns task routing and document precedence.
 
-> **Project context:** Apply the procedure to Customer v2's actual modules, tools, and test commands. Invoice, Promotion, Room, and other named examples do not establish v1 behavior. For API migration, read the [project profile](../docs/project-profile.md) and [migration workflow](../docs/migration.md).
+> **Project context:** Apply the procedure to pos-icool's actual modules, tools, and test commands. Invoice, Promotion, Room, and other named examples are illustrative and do not establish business behavior. Read the [project profile](../docs/project-profile.md) before implementation.
 
 ---
 
@@ -826,7 +826,7 @@ When implementing a repository:
 
 5. Implement business-oriented persistence semantics; keep SQL/QueryBuilder inside infrastructure.
 
-6. Add integration tests using real MSSQL where practical.
+6. Add integration tests using real PostgreSQL where practical.
 ```
 
 Do not expose infrastructure types through repository interfaces. When refactoring a module with legacy `Directory` or `Persistence` class names, update its port, token, adapter, DI wiring, imports, and tests together; avoid a repository-wide rename disconnected from the owning behavior slice.
@@ -1069,7 +1069,7 @@ Place each new unit test in `__tests__/` beside its source file's directory, usi
 Run/add:
 
 ```text
-MSSQL integration tests
+PostgreSQL integration tests
 ```
 
 ### Redis / Kafka change
@@ -1111,7 +1111,7 @@ For the operational patterns in this standard, select failure cases as well as t
 
 Before finishing, run the validations supported by the repository and relevant to the change.
 
-Run `bash quality-gates/ci-check.sh` from the repository root when validating architecture-sensitive work. It checks the standard's links and section references, source import boundaries against the shrinking transitional baseline, and unit-test naming/location against the legacy inventory. A green result with remaining baseline entries is not full architectural compliance. Add the applicable scenarios in `CONTRACT-TESTS.md` as application integration tests when the corresponding transaction, outbox, inbox, cache, or reporting capability is used. Static checks do not verify runtime consistency.
+Run `npm run quality` from the repository root when validating architecture-sensitive work. It checks the standard's links and section references, rejects stale project context, verifies source import boundaries, and enforces unit-test naming/location. pos-icool currently has no boundary or legacy-test baseline; do not create one merely to bypass a finding. Add the applicable scenarios in `CONTRACT-TESTS.md` as application integration tests when the corresponding transaction, outbox, inbox, cache, or reporting capability is used. Static checks do not verify runtime consistency.
 
 Typical order:
 
