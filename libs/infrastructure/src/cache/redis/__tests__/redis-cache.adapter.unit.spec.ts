@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { vi } from 'vitest';
 
 import type { RedisCacheClient } from '../redis-cache.client';
@@ -61,5 +62,20 @@ describe('RedisCacheAdapter', () => {
     };
 
     await expect(adapter(redis).invalidate('central:item:detail:1')).resolves.toBeUndefined();
+  });
+
+  it('does not write redis error messages to logs', async () => {
+    const redis: RedisCacheClient = {
+      get: vi.fn().mockRejectedValue(new Error('password=secret')),
+      set: vi.fn(),
+      del: vi.fn(),
+    };
+    const log = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+
+    await adapter(redis).get('central:item:detail:1');
+
+    expect(log).toHaveBeenCalledOnce();
+    expect(JSON.stringify(log.mock.calls)).not.toContain('password=secret');
+    log.mockRestore();
   });
 });

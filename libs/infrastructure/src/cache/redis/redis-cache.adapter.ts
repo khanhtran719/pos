@@ -18,8 +18,8 @@ export class RedisCacheAdapter implements CachePort {
       }
 
       return JSON.parse(raw) as T;
-    } catch (error) {
-      this.logFailure('redis_cache_get_failed', key, error);
+    } catch {
+      this.logFailure('redis_cache_get_failed', key);
       return undefined;
     }
   }
@@ -35,25 +35,25 @@ export class RedisCacheAdapter implements CachePort {
 
     try {
       await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
-    } catch (error) {
-      this.logFailure('redis_cache_set_failed', key, error);
+    } catch {
+      this.logFailure('redis_cache_set_failed', key);
     }
   }
 
   async invalidate(key: string): Promise<void> {
     try {
       await this.redis.del(key);
-    } catch (error) {
-      this.logFailure('redis_cache_invalidate_failed', key, error);
+    } catch {
+      this.logFailure('redis_cache_invalidate_failed', key);
     }
   }
 
-  private logFailure(event: string, key: string, error: unknown): void {
+  private logFailure(event: string, key: string): void {
     this.logger.warn(
       JSON.stringify({
         event,
         key,
-        message: error instanceof Error ? error.message : 'unknown redis error',
+        errorType: 'redis_error',
       }),
     );
   }

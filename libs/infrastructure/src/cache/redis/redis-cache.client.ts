@@ -1,6 +1,11 @@
 export interface RedisCacheClient {
   get(key: string): Promise<string | null>;
-  set(key: string, value: string, expiryMode: 'EX', ttlSeconds: number): Promise<unknown>;
+  set(
+    key: string,
+    value: string,
+    expiryMode: 'EX',
+    ttlSeconds: number,
+  ): Promise<unknown>;
   del(key: string): Promise<unknown>;
 }
 

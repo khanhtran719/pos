@@ -1,4 +1,4 @@
-import { BadRequestException, type ArgumentsHost } from '@nestjs/common';
+import { BadRequestException, type ArgumentsHost, Logger } from '@nestjs/common';
 import { vi } from 'vitest';
 
 import { DomainError } from '../../../domain/domain-error';
@@ -24,11 +24,12 @@ describe('DomainExceptionFilter', () => {
     return {
       switchToHttp: () => ({
         getResponse: () => response,
+        getRequest: () => ({ headers: {} }),
       }),
     } as ArgumentsHost;
   }
 
-  it('maps a domain error to its code and message', () => {
+  it('maps a domain error to the standard error envelope', () => {
     const response = { status: vi.fn().mockReturnThis(), json: vi.fn() };
 
     RequestContext.run({ requestId: 'req-1', correlationId: 'req-1' }, () => {
@@ -37,9 +38,10 @@ describe('DomainExceptionFilter', () => {
 
     expect(response.status).toHaveBeenCalledWith(400);
     expect(response.json).toHaveBeenCalledWith({
-      code: 'ITEM_CLOSED',
+      data: null,
+      errorCode: 'Item is closed',
       message: 'Item is closed',
-      requestId: 'req-1',
+      status: false,
     });
   });
 
@@ -47,17 +49,15 @@ describe('DomainExceptionFilter', () => {
     const response = { status: vi.fn().mockReturnThis(), json: vi.fn() };
 
     RequestContext.run({ requestId: 'req-2', correlationId: 'req-2' }, () => {
-      filter.catch(
-        new ValidationException('Mã PIN không được để trống.'),
-        hostFor(response),
-      );
+      filter.catch(new ValidationException('Mã PIN không được để trống.'), hostFor(response));
     });
 
     expect(response.status).toHaveBeenCalledWith(400);
     expect(response.json).toHaveBeenCalledWith({
-      code: 'VALIDATION',
+      data: null,
+      errorCode: 'Mã PIN không được để trống.',
       message: 'Mã PIN không được để trống.',
-      requestId: 'req-2',
+      status: false,
     });
   });
 
@@ -68,10 +68,22 @@ describe('DomainExceptionFilter', () => {
 
     expect(response.status).toHaveBeenCalledWith(500);
     expect(response.json).toHaveBeenCalledWith({
-      code: 'INTERNAL_ERROR',
+      data: null,
+      errorCode: 'Internal server error',
       message: 'Internal server error',
-      requestId: undefined,
+      status: false,
     });
+  });
+
+  it('does not write an unexpected error message to logs', () => {
+    const response = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+    const log = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+
+    filter.catch(new Error('password=secret'), hostFor(response));
+
+    expect(log).toHaveBeenCalledOnce();
+    expect(JSON.stringify(log.mock.calls)).not.toContain('password=secret');
+    log.mockRestore();
   });
 
   it('keeps the status of an http exception', () => {
@@ -81,9 +93,10 @@ describe('DomainExceptionFilter', () => {
 
     expect(response.status).toHaveBeenCalledWith(400);
     expect(response.json).toHaveBeenCalledWith({
-      code: 'HTTP_ERROR',
+      data: null,
+      errorCode: 'port is invalid',
       message: 'port is invalid',
-      requestId: undefined,
+      status: false,
     });
   });
 });

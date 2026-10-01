@@ -764,7 +764,7 @@ HTTP Response
 Example:
 
 ```text
-GET /invoices?page=1&size=20
+GET /invoices?page=1&pageSize=20
 ```
 
 does not need to use:
@@ -2390,7 +2390,7 @@ Response body:
 }
 ```
 
-`metadata` is omitted here because this response is not paginated. On success, `data` is the response DTO, `errorCode` is `null`, and `status` is `true`. A paginated success adds `metadata` beside `data` with `page`, `size`, `total`, `lastPage`, and `next`. Do not nest `metadata` inside `data`.
+`metadata` is omitted here because this response is not paginated. On success, `data` is the response DTO, `errorCode` is `null`, and `status` is `true`. A paginated success adds `metadata` beside `data` with `page`, `pageSize`, `total`, `lastPage`, and `next`. Do not nest `metadata` inside `data`.
 
 `requestId` belongs to request context and logs (see §13J and §50). It is not a response field. The domain class name is not a response field. Full field rules are in the [project profile](../docs/project-profile.md).
 
@@ -2702,6 +2702,8 @@ Example:
 /ready
   Can this instance serve traffic?
 ```
+
+These endpoints stay outside the application API prefix and response envelope. Keep their payloads operationally simple: `{ "status": "ok" }` when healthy and an HTTP 503 `{ "status": "error" }` when a critical readiness dependency is unavailable.
 
 Readiness may consider critical dependencies.
 

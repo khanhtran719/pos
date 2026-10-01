@@ -1,4 +1,5 @@
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { DataSource } from 'typeorm';
 
 @Controller()
@@ -6,11 +7,12 @@ export class ReadyController {
   constructor(private readonly dataSource: DataSource) {}
 
   @Get('ready')
-  async ready(): Promise<{ status: 'ok' }> {
+  async ready(@Res({ passthrough: true }) response: Response): Promise<{ status: 'ok' | 'error' }> {
     try {
       await this.dataSource.query('SELECT 1');
     } catch {
-      throw new ServiceUnavailableException('database unavailable');
+      response.status(HttpStatus.SERVICE_UNAVAILABLE);
+      return { status: 'error' };
     }
 
     return { status: 'ok' };

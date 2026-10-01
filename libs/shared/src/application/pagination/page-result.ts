@@ -7,13 +7,13 @@ import {
 export interface PageResult<T> {
   readonly items: readonly T[];
   readonly page: number;
-  readonly size: number;
+  readonly pageSize: number;
   readonly total: number;
 }
 
 export interface PageMetadata {
   readonly page: number;
-  readonly size: number;
+  readonly pageSize: number;
   readonly total: number;
   readonly lastPage: number;
   readonly next: boolean;
@@ -30,25 +30,25 @@ export function createPageResult<T>(
   return {
     items: [...items],
     page: request.page,
-    size: request.size,
+    pageSize: request.pageSize,
     total,
   };
 }
 
 export function toPageMetadata(
-  result: Pick<PageResult<unknown>, 'page' | 'size' | 'total'>,
+  result: Pick<PageResult<unknown>, 'page' | 'pageSize' | 'total'>,
 ): PageMetadata {
   assertPageRequest(result);
   assertTotal(result.total);
 
-  const lastPage = Math.ceil(result.total / result.size) || 1;
+  const lastPage = Math.ceil(result.total / result.pageSize) || 1;
 
   return {
     page: result.page,
-    size: result.size,
+    pageSize: result.pageSize,
     total: result.total,
     lastPage,
-    next: result.page * result.size < result.total,
+    next: result.page * result.pageSize < result.total,
   };
 }
 

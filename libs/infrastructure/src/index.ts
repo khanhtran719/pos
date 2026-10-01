@@ -1,15 +1,17 @@
+export { RedisKeyFactory } from './cache/redis/redis-key.factory';
+export { CacheModule } from './cache/redis/redis.module';
 export {
   buildAppConfig,
+  buildAuthConfig,
   buildDatabaseConfig,
   buildRedisConfig,
   validateEnvironment,
   type AppEnvironment,
+  type AuthEnvironment,
   type DatabaseEnvironment,
   type RedisEnvironment,
   type ValidatedEnvironment,
 } from './config/environment';
-export { CacheModule } from './cache/redis/redis.module';
-export { RedisKeyFactory } from './cache/redis/redis-key.factory';
 export { DatabaseModule } from './database/database.module';
-export { TypeOrmRepositoryProvider } from './database/typeorm-repository-provider';
+export { TypeOrmRepositoryProvider } from './database/transaction/typeorm-repository-provider';
 export { HealthModule } from './health/health.module';

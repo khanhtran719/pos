@@ -34,7 +34,9 @@ describe('TypeOrmUnitOfWork', () => {
     } as unknown as DataSource;
     const unitOfWork = new TypeOrmUnitOfWork(dataSource, context);
 
-    await context.run(manager, () => unitOfWork.transaction(async () => undefined));
+    await context.run(manager, () =>
+      unitOfWork.transaction(async () => undefined),
+    );
 
     expect(dataSource.transaction).not.toHaveBeenCalled();
   });

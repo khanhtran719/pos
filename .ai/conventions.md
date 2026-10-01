@@ -1641,12 +1641,12 @@ pos-icool uses one application shape, in `libs/shared/src/application/pagination
 ```text
 PageRequest
     page
-    size
+    pageSize
 
 PageResult<T>
     items
     page
-    size
+    pageSize
     total
 ```
 
@@ -1654,13 +1654,13 @@ PageResult<T>
 
 ```text
 page
-size
+pageSize
 total
 lastPage
 next
 ```
 
-An empty result uses `lastPage` 1 and `next` false. `items` is the `data` array. `metadata` sits beside `data`. Do not invent another pagination shape per module, and do not send `pageSize` or `items` on the wire. See `docs/project-profile.md`.
+An empty result uses `lastPage` 1 and `next` false. `items` is the `data` array. `metadata` sits beside `data`. Do not invent another pagination shape per module, and do not send `items` on the wire. See `docs/project-profile.md`.
 
 ---
 
@@ -3429,7 +3429,7 @@ Use:
 /ready
 ```
 
-unless platform constraints require alternatives.
+outside the application API prefix and response envelope, unless platform constraints require alternatives.
 
 Keep response payload simple and stable.
 

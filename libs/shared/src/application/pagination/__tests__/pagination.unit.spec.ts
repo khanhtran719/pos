@@ -1,8 +1,4 @@
-import {
-  InvalidPageRequestError,
-  createPageRequest,
-  toPageWindow,
-} from '../page-request';
+import { InvalidPageRequestError, createPageRequest, toPageWindow } from '../page-request';
 import { createPageResult, toPageMetadata } from '../page-result';
 
 describe('pagination', () => {
@@ -25,7 +21,7 @@ describe('pagination', () => {
     expect(result.items).toEqual(['a', 'b']);
     expect(toPageMetadata(result)).toEqual({
       page: 2,
-      size: 10,
+      pageSize: 10,
       total: 25,
       lastPage: 3,
       next: true,
@@ -37,7 +33,7 @@ describe('pagination', () => {
 
     expect(toPageMetadata(result)).toEqual({
       page: 2,
-      size: 10,
+      pageSize: 10,
       total: 20,
       lastPage: 2,
       next: false,
@@ -49,14 +45,14 @@ describe('pagination', () => {
 
     expect(toPageMetadata(result)).toEqual({
       page: 1,
-      size: 10,
+      pageSize: 10,
       total: 0,
       lastPage: 1,
       next: false,
     });
   });
 
-  it('rejects a page or size below 1 and a negative total', () => {
+  it('rejects a page or page size below 1 and a negative total', () => {
     expect(() => createPageRequest(0, 10)).toThrow(InvalidPageRequestError);
     expect(() => createPageRequest(1, 1.5)).toThrow(InvalidPageRequestError);
     expect(() => createPageResult([], createPageRequest(1, 10), -1)).toThrow(

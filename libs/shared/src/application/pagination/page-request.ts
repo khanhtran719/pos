@@ -1,6 +1,6 @@
 export interface PageRequest {
   readonly page: number;
-  readonly size: number;
+  readonly pageSize: number;
 }
 
 export interface PageWindow {
@@ -15,25 +15,25 @@ export class InvalidPageRequestError extends Error {
   }
 }
 
-export function createPageRequest(page: number, size: number): PageRequest {
+export function createPageRequest(page: number, pageSize: number): PageRequest {
   assertPageNumber(page, 'page');
-  assertPageNumber(size, 'size');
+  assertPageNumber(pageSize, 'pageSize');
 
-  return { page, size };
+  return { page, pageSize };
 }
 
 export function toPageWindow(request: PageRequest): PageWindow {
   assertPageRequest(request);
 
   return {
-    offset: (request.page - 1) * request.size,
-    limit: request.size,
+    offset: (request.page - 1) * request.pageSize,
+    limit: request.pageSize,
   };
 }
 
 export function assertPageRequest(request: PageRequest): void {
   assertPageNumber(request.page, 'page');
-  assertPageNumber(request.size, 'size');
+  assertPageNumber(request.pageSize, 'pageSize');
 }
 
 function assertPageNumber(value: number, name: string): void {

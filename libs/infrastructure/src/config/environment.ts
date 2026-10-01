@@ -18,6 +18,13 @@ export interface RedisEnvironment {
   password?: string;
 }
 
+export interface AuthEnvironment {
+  accessTokenSecret: string;
+  accessTokenExpiresIn?: string;
+  refreshTokenSecret: string;
+  refreshTokenExpiresIn?: string;
+}
+
 export interface ValidatedEnvironment {
   APP_NAME: string;
   PORT: number;
@@ -30,6 +37,10 @@ export interface ValidatedEnvironment {
   REDIS_HOST: string;
   REDIS_PORT: number;
   REDIS_PASSWORD?: string;
+  ACCESS_TOKEN_SECRET: string;
+  ACCESS_TOKEN_EXPIRES_IN?: string;
+  REFRESH_TOKEN_SECRET: string;
+  REFRESH_TOKEN_EXPIRES_IN?: string;
 }
 
 const REQUIRED_STRINGS = [
@@ -38,11 +49,11 @@ const REQUIRED_STRINGS = [
   'DB_PASSWORD',
   'DB_DATABASE',
   'REDIS_HOST',
+  'ACCESS_TOKEN_SECRET',
+  'REFRESH_TOKEN_SECRET',
 ] as const;
 
-export function validateEnvironment(
-  config: Record<string, unknown>,
-): Record<string, unknown> {
+export function validateEnvironment(config: Record<string, unknown>): Record<string, unknown> {
   for (const key of REQUIRED_STRINGS) {
     const value = config[key];
 
@@ -57,6 +68,8 @@ export function validateEnvironment(
   const appName = readString(config.APP_NAME, 'central');
   const nodeEnv = readString(config.NODE_ENV, 'development');
   const redisPassword = optionalString(config.REDIS_PASSWORD);
+  const accessTokenExpiresIn = optionalString(config.ACCESS_TOKEN_EXPIRES_IN);
+  const refreshTokenExpiresIn = optionalString(config.REFRESH_TOKEN_EXPIRES_IN);
 
   return {
     ...config,
@@ -71,6 +84,10 @@ export function validateEnvironment(
     REDIS_HOST: (config.REDIS_HOST as string).trim(),
     REDIS_PORT: redisPort,
     REDIS_PASSWORD: redisPassword,
+    ACCESS_TOKEN_SECRET: (config.ACCESS_TOKEN_SECRET as string).trim(),
+    ACCESS_TOKEN_EXPIRES_IN: accessTokenExpiresIn,
+    REFRESH_TOKEN_SECRET: (config.REFRESH_TOKEN_SECRET as string).trim(),
+    REFRESH_TOKEN_EXPIRES_IN: refreshTokenExpiresIn,
   };
 }
 
@@ -102,6 +119,18 @@ export function buildRedisConfig(): RedisEnvironment {
   };
 }
 
+export function buildAuthConfig(): AuthEnvironment {
+  const accessTokenExpiresIn = process.env.ACCESS_TOKEN_EXPIRES_IN?.trim();
+  const refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN?.trim();
+
+  return {
+    accessTokenSecret: requiredProcessEnv('ACCESS_TOKEN_SECRET'),
+    accessTokenExpiresIn: accessTokenExpiresIn || '15m',
+    refreshTokenSecret: requiredProcessEnv('REFRESH_TOKEN_SECRET'),
+    refreshTokenExpiresIn: refreshTokenExpiresIn || '7d',
+  };
+}
+
 function requiredProcessEnv(name: string): string {
   const value = process.env[name];
 
@@ -117,7 +146,7 @@ function optionalString(value: unknown): string | undefined {
     return undefined;
   }
 
-  return value;
+  return value.trim();
 }
 
 function readString(value: unknown, fallback: string): string {

@@ -12,9 +12,10 @@ import { DomainError } from '../../domain/domain-error';
 import { RequestContext } from '../request-context';
 
 interface ErrorBody {
-  code: string;
+  data: null;
+  errorCode: string;
   message: string;
-  requestId?: string;
+  status: false;
 }
 
 @Catch()
@@ -24,14 +25,15 @@ export class DomainExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<Response>();
     const requestId = RequestContext.current()?.requestId;
-    const body = this.toBody(exception, requestId);
+
+    const body = this.toBody(exception);
 
     if (!(exception instanceof DomainError) && !(exception instanceof HttpException)) {
       this.logger.error(
         JSON.stringify({
           event: 'unhandled_exception',
           requestId,
-          message: exception instanceof Error ? exception.message : 'unknown error',
+          errorType: 'unexpected_error',
         }),
       );
     }
@@ -39,41 +41,35 @@ export class DomainExceptionFilter implements ExceptionFilter {
     response.status(body.status).json(body.payload);
   }
 
-  private toBody(
-    exception: unknown,
-    requestId: string | undefined,
-  ): { status: number; payload: ErrorBody } {
+  private toBody(exception: unknown): { status: number; payload: ErrorBody } {
     if (exception instanceof DomainError) {
       return {
         status: HttpStatus.BAD_REQUEST,
-        payload: {
-          code: exception.code,
-          message: exception.message,
-          requestId,
-        },
+        payload: errorBody(exception.message),
       };
     }
 
     if (exception instanceof HttpException) {
       return {
         status: exception.getStatus(),
-        payload: {
-          code: 'HTTP_ERROR',
-          message: httpExceptionMessage(exception),
-          requestId,
-        },
+        payload: errorBody(httpExceptionMessage(exception)),
       };
     }
 
     return {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
-      payload: {
-        code: 'INTERNAL_ERROR',
-        message: 'Internal server error',
-        requestId,
-      },
+      payload: errorBody('Internal server error'),
     };
   }
+}
+
+function errorBody(message: string): ErrorBody {
+  return {
+    data: null,
+    errorCode: message,
+    message,
+    status: false,
+  };
 }
 
 function httpExceptionMessage(exception: HttpException): string {

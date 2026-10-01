@@ -61,9 +61,19 @@ DB_DATABASE
 REDIS_HOST
 REDIS_PORT
 REDIS_PASSWORD
+ACCESS_TOKEN_SECRET
+ACCESS_TOKEN_EXPIRES_IN
+REFRESH_TOKEN_SECRET
+REFRESH_TOKEN_EXPIRES_IN
 ```
 
-`/live` checks the process only. `/ready` treats PostgreSQL as a critical dependency. Optional dependencies must not be added to readiness by default. Both stay outside the API response envelope and return `{ "status": "ok" }`.
+Authentication configuration is required by all three apps. The two token-secret variables must be non-empty; expiry values default to `15m` and `7d` when omitted. Committed `.env.example` files contain placeholders only. Real secrets come from the deployment platform.
+
+`/live` checks the process only. `/ready` treats PostgreSQL as a critical dependency. Optional dependencies must not be added to readiness by default. Both stay outside the `/api` prefix and the API response envelope. A healthy endpoint returns `{ "status": "ok" }`; unavailable readiness returns HTTP 503 with `{ "status": "error" }`.
+
+## Request context
+
+Every HTTP request has a `requestId` and `correlationId`. The server preserves non-empty `x-request-id` and `x-correlation-id` headers; otherwise it generates a request ID and uses it as the correlation ID. Both identifiers are returned as response headers and are available through `RequestContext` for logs and later outbound adapters. They are technical metadata, not domain state and not response-body fields.
 
 ## HTTP response
 
@@ -80,6 +90,8 @@ An API response body uses these fields:
 
 `data` is the response DTO, an array of those DTOs, or `null`. `status` is a boolean: `true` on success and `false` on failure. On success `errorCode` is `null`. On failure `data` is `null`, and `errorCode` and `message` both carry the same safe client text. Clients already read `errorCode` as that text. A stable domain name such as `InvoiceAlreadyPaidError` stays on the error class. It is not a body field, and the body has no `code` or `requestId`.
 
+The global API response interceptor wraps ordinary response DTOs in this success envelope. A controller returning `PageResult<T>` is mapped to `data: items` plus the pagination `metadata`. `/live` and `/ready` bypass this interceptor.
+
 `metadata` is present only on a paginated API. It is a sibling of `data`, not a property inside `data`. A non-paginated response omits `metadata`.
 
 ```json
@@ -87,7 +99,7 @@ An API response body uses these fields:
   "data": [],
   "metadata": {
     "page": 1,
-    "size": 10,
+    "pageSize": 10,
     "total": 0,
     "lastPage": 1,
     "next": false
@@ -98,7 +110,7 @@ An API response body uses these fields:
 }
 ```
 
-`page`, `size`, `total`, and `lastPage` are numbers. `next` is a boolean. This envelope is the local contract. It replaces the `{ code, message, requestId }` example in `.ai/architecture.md` §46 and the wire code in `.ai/rules.md` R-35.
+`page`, `pageSize`, `total`, and `lastPage` are numbers. `next` is a boolean. This envelope is the local contract. It replaces the `{ code, message, requestId }` example in `.ai/architecture.md` §46 and the wire code in `.ai/rules.md` R-35.
 
 ## Local deployment
 

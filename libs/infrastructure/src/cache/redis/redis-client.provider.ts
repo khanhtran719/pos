@@ -24,11 +24,11 @@ export class RedisClientProvider implements OnModuleInit, OnModuleDestroy {
       retryStrategy: (times: number) => Math.min(times * 200, 2_000),
     });
 
-    this.client.on('error', (error: Error) => {
+    this.client.on('error', () => {
       this.logger.warn(
         JSON.stringify({
           event: 'redis_client_error',
-          message: error.message,
+          errorType: 'redis_error',
         }),
       );
     });
@@ -37,11 +37,11 @@ export class RedisClientProvider implements OnModuleInit, OnModuleDestroy {
   async onModuleInit(): Promise<void> {
     try {
       await this.client.connect();
-    } catch (error) {
+    } catch {
       this.logger.warn(
         JSON.stringify({
           event: 'redis_connect_failed',
-          message: error instanceof Error ? error.message : 'unknown redis error',
+          errorType: 'redis_error',
         }),
       );
     }

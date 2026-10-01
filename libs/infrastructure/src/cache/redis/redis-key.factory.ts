@@ -11,7 +11,9 @@ export class RedisKeyFactory {
 
     for (const segment of segments) {
       if (segment.trim() === '' || segment.includes(':')) {
-        throw new Error('Redis key segments must be non-empty and must not contain ":"');
+        throw new Error(
+          'Redis key segments must be non-empty and must not contain ":"',
+        );
       }
     }
 

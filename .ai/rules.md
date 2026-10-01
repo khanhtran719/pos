@@ -1328,6 +1328,8 @@ Keep liveness and readiness conceptually separate.
     Can this instance serve traffic?
 ```
 
+Health endpoints MUST stay outside the application API prefix and API response envelope.
+
 Dependency criticality must be explicit.
 
 Optional dependency failure should not automatically make the process unready.

@@ -4,9 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UNIT_OF_WORK } from '@shared';
 
 import type { DatabaseEnvironment } from '../config/environment';
-import { TypeOrmRepositoryProvider } from './typeorm-repository-provider';
-import { TypeOrmTransactionContext } from './typeorm-transaction-context';
-import { TypeOrmUnitOfWork } from './typeorm-unit-of-work';
+import { TypeOrmRepositoryProvider } from './transaction/typeorm-repository-provider';
+import { TypeOrmTransactionContext } from './transaction/typeorm-transaction-context';
+import { TypeOrmUnitOfWork } from './transaction/typeorm-unit-of-work';
 
 @Module({})
 export class DatabaseModule {
