@@ -1,0 +1,54 @@
+{
+  "name": "pos-icool",
+  "version": "0.1.0",
+  "private": true,
+  "description": "pos-icool monorepo: central, ipos, and kpos",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nest build central && nest build ipos && nest build kpos",
+    "build:central": "nest build central",
+    "build:ipos": "nest build ipos",
+    "build:kpos": "nest build kpos",
+    "start:central": "nest start central",
+    "start:central:dev": "nest start central --watch",
+    "start:ipos": "nest start ipos",
+    "start:ipos:dev": "nest start ipos --watch",
+    "start:kpos": "nest start kpos",
+    "start:kpos:dev": "nest start kpos --watch",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.1.2",
+    "@nestjs/config": "^12.0.1",
+    "@nestjs/core": "^12.1.2",
+    "@nestjs/platform-express": "^12.1.2",
+    "@nestjs/typeorm": "^12.0.2",
+    "ioredis": "^5.11.1",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "typeorm": "^1.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@nestjs/cli": "^12.0.8",
+    "@nestjs/schematics": "^12.0.6",
+    "@nestjs/testing": "^12.1.2",
+    "@rspack/core": "^2.2.8",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.3",
+    "eslint": "^10.11.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9",
+    "tsconfig-paths-webpack-plugin": "^4.2.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3",
+    "webpack-node-externals": "^3.0.0"
+  }
+}

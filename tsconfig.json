@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
+    "types": ["node", "vitest/globals"],
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "noEmit": true,
+    "paths": {
+      "@shared": ["libs/shared/src"],
+      "@shared/*": ["libs/shared/src/*"],
+      "@infrastructure": ["libs/infrastructure/src"],
+      "@infrastructure/*": ["libs/infrastructure/src/*"]
+    }
+  },
+  "include": ["apps/**/*.ts", "libs/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

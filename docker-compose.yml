@@ -1,0 +1,105 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pos
+      POSTGRES_PASSWORD: pos
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pos-postgres:/var/lib/postgresql/data
+      - ./docker/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pos -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  central:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        APP: central
+    environment:
+      NODE_ENV: production
+      APP_NAME: central
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: pos
+      DB_PASSWORD: pos
+      DB_DATABASE: central
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  ipos:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        APP: ipos
+    environment:
+      NODE_ENV: production
+      APP_NAME: ipos
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: pos
+      DB_PASSWORD: pos
+      DB_DATABASE: ipos
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  kpos:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        APP: kpos
+    environment:
+      NODE_ENV: production
+      APP_NAME: kpos
+      PORT: 3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: pos
+      DB_PASSWORD: pos
+      DB_DATABASE: kpos
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pos-postgres:
