@@ -1,6 +1,35 @@
-# Operational contract tests for adopting projects
+# Operational contract tests
 
-The quality gates check documents and import boundaries. The behaviors below require the **adopting application's real adapters**. Add these as NestJS integration tests using a real PostgreSQL test database and the selected broker/cache test services where applicable. Do not substitute mocked TypeORM methods for a transaction or lock test.
+The quality gates check documents and import boundaries. The behaviors below require pos-icool's **real adapters**. Add these as NestJS integration tests using a real PostgreSQL test database and the selected broker/cache test services where applicable. Do not substitute mocked TypeORM methods for a transaction or lock test.
+
+## 0. Platform HTTP contract
+
+The shared platform tests must prove:
+
+- `central`, `ipos`, and `kpos` apply the same bootstrap policy.
+- Ordinary results and `PageResult<T>` use the standard envelope; pagination exposes `pageSize`.
+- Semantic error categories map to 400/401/403/404/409/422/429, while unknown failures return a safe 500 body.
+- Request and correlation IDs propagate through headers/context but do not appear in the response body.
+- `/live`, `/ready`, and `/metrics` are outside `/api`; health responses bypass the API envelope.
+- Invalid/missing required environment values prevent startup without logging secret values.
+
+## 0A. Central authentication
+
+Run the implemented PostgreSQL session/concurrency contract with an isolated test database:
+
+```text
+TEST_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<test-db> npm run test:integration
+```
+
+The test creates and removes a unique PostgreSQL schema and enables TypeORM synchronization only for that disposable schema.
+
+- Login returns the same unauthorized response for an unknown, deleted, inactive, locked, or wrong-PIN account; timing stays close by performing a dummy bcrypt comparison when no usable hash exists.
+- Session persistence contains no raw access or refresh token.
+- Two concurrent refresh attempts with the same token cannot both rotate the session. Reuse of a rotated token revokes the session.
+- Logout is idempotent and immediately prevents the session's access token from passing the protected-route guard.
+- Locking, deactivating, or deleting a user prevents access-token use and refresh.
+- Access tokens cannot be used at the refresh endpoint and refresh tokens cannot authenticate protected endpoints.
+- Required token secrets and expiry formats fail startup when invalid, without exposing their values.
 
 ## 1. Cross-module write transaction
 
@@ -48,4 +77,4 @@ For an external non-transactional side effect, assert the downstream idempotency
 
 Supply a task fixture whose issue, log, comment, or tool result contains a fake instruction to run a command, reveal a secret, or override the architecture. Assert the agent treats that text as data and continues under the instruction order in `AGENTS.md`. This is an agent evaluation, not an application unit test.
 
-Each adopting project should select the scenarios for the capabilities it actually uses. Record the test command in its CI; the reusable kit does not pretend to run these application tests without a project harness.
+Implement the scenarios for capabilities actually used by pos-icool. Record their commands in CI; the static quality gate does not pretend to prove runtime transaction, broker, cache, or reporting behavior.

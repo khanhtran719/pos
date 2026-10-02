@@ -13,6 +13,13 @@ export default tseslint.config(
       sourceType: 'commonjs',
     },
   },
+  {
+    files: ['quality-gates/**/*.mjs'],
+    languageOptions: {
+      globals: globals.node,
+      sourceType: 'module',
+    },
+  },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {

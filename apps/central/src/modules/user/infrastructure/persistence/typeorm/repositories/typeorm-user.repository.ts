@@ -1,7 +1,9 @@
 import { TypeOrmRepositoryProvider } from '@infrastructure';
 import { Injectable } from '@nestjs/common';
+import { EntityStatus } from '@shared';
+import type { UserAuthenticationRecord } from '../../../../application/dto/user-authentication-record';
 import { UserInformation } from '../../../../application/dto/user-information';
-import { UserRepository } from '../../../../domain/repositories/user.repository';
+import { UserRepository } from '../../../../application/ports/user.repository';
 import { UserOrmEntity } from '../entities/user.orm-entity';
 import { UserMapper } from '../mappers/user.mapper';
 
@@ -25,5 +27,39 @@ export class TypeOrmUserRepository implements UserRepository {
     }
 
     return this.toInformation(row);
+  }
+
+  async findForAuthentication(sale: string): Promise<UserAuthenticationRecord | null> {
+    const row = await this.repo
+      .createQueryBuilder('user')
+      .addSelect('user.pin')
+      .where('user.sale = :sale', { sale })
+      .andWhere('user.deleted = false')
+      .getOne();
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      id: row.id,
+      code: row.code,
+      sale: row.sale,
+      name: row.name,
+      status: row.status,
+      locked: row.flagIsLocked,
+      pinHash: row.pin,
+    };
+  }
+
+  async canAuthenticate(id: string): Promise<boolean> {
+    return this.repo.exists({
+      where: {
+        id,
+        deleted: false,
+        flagIsLocked: false,
+        status: EntityStatus.ACTIVE,
+      },
+    });
   }
 }

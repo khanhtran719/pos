@@ -1192,6 +1192,8 @@ SomethingWrongError
 
 unless they are meaningful base classes.
 
+Errors extending the shared base declare `readonly category = ErrorCategory.<Category>`. Choose the business meaning, not an HTTP status name. `ValidationException` uses `BadInput`; invariant failures normally use `BusinessRule` or `Conflict`; absence uses `NotFound`. Presentation performs the HTTP mapping.
+
 ---
 
 # 39. Error Code Naming

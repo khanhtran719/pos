@@ -1113,6 +1113,20 @@ If these are not defined yet, the cache should not be added.
 
 Errors must respect architectural boundaries.
 
+Domain/Application errors carry a transport-neutral semantic category. The HTTP adapter maps it as follows:
+
+| Semantic category | HTTP status |
+| ----------------- | ----------- |
+| `bad_input`       | 400         |
+| `unauthorized`    | 401         |
+| `forbidden`       | 403         |
+| `not_found`       | 404         |
+| `conflict`        | 409         |
+| `business_rule`   | 422         |
+| `rate_limited`    | 429         |
+
+Do not put HTTP status values or NestJS exceptions in Domain or Application code.
+
 Flow:
 
 ```text
@@ -2366,6 +2380,8 @@ HttpException
 ```
 
 HTTP mapping happens at the presentation boundary.
+
+Each client-visible error declares one semantic category from §13I. The exception mapper converts the category to the transport status. Adding an error therefore requires an explicit category choice; it must not fall through to a blanket HTTP 400.
 
 Example:
 

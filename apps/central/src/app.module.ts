@@ -7,6 +7,7 @@ import { appConfig } from './config/app.config';
 import { authConfig } from './config/auth.config';
 import { databaseConfig } from './config/database.config';
 import { redisConfig } from './config/redis.config';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { redisConfig } from './config/redis.config';
     DatabaseModule.forRoot(),
     CacheModule.forRoot(),
     HealthModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

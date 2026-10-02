@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, extname, join, relative, resolve, sep } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
@@ -72,7 +72,13 @@ function moduleInfo(path, modulesDir) {
 function architecturalInfo(path, modulesDirs, sharedDirs) {
   for (const modulesDir of modulesDirs) {
     const business = moduleInfo(path, modulesDir);
-    if (business) return { ...business, module: `${modulesDir}:${business.module}` };
+    if (business) {
+      return {
+        ...business,
+        moduleName: business.module,
+        module: `${modulesDir}:${business.module}`,
+      };
+    }
   }
   for (const sharedDir of sharedDirs) {
     const rel = relative(sharedDir, path);
@@ -81,6 +87,7 @@ function architecturalInfo(path, modulesDirs, sharedDirs) {
     if (segments.length >= 2) {
       return {
         module: `__shared__:${sharedDir}`,
+        moduleName: '__shared__',
         layer: segments[0],
         internal: segments.slice(1).join('/'),
       };
@@ -115,7 +122,7 @@ function resolveImport(specifier, file, options, host) {
 }
 
 function publicCrossModule(info, config) {
-  return info.internal === 'index.ts' || info.internal === `${info.module}.module.ts` || config.publicCrossModulePrefixes.some(prefix => info.internal.startsWith(prefix));
+  return info.internal === 'index.ts' || info.internal === `${info.moduleName}.module.ts` || config.publicCrossModulePrefixes.some(prefix => info.internal.startsWith(prefix));
 }
 
 export function checkBoundaries(root) {

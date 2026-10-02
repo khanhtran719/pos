@@ -24,6 +24,11 @@ test('allows a public facade and same-module domain import', () => fixture({
   'src/modules/b/application/facades/b.facade.ts': 'export class BFacade {}',
 }, root => assert.deepEqual(checkBoundaries(root), [])));
 
+test('allows a cross-module Nest module import through the module root', () => fixture({
+  'src/modules/a/a.module.ts': "import { BModule } from '../b/b.module'; export class AModule {}",
+  'src/modules/b/b.module.ts': 'export class BModule {}',
+}, root => assert.deepEqual(checkBoundaries(root), [])));
+
 test('rejects domain framework imports and application TypeORM imports', () => fixture({
   'src/modules/a/domain/a.ts': "import { Injectable } from '@nestjs/common';",
   'src/modules/a/application/use-cases/run.ts': "import { Repository } from 'typeorm';",
@@ -70,7 +75,7 @@ test('rejects imports between deployable apps', () => fixture({
     sharedRoots: ['libs/shared/src'],
     appsDir: 'apps',
   }),
-  'apps/central/src/modules/a/application/run.ts': "import { B } from '../../../../ipos/src/modules/b/domain/b';",
+  'apps/central/src/modules/a/application/run.ts': "import { B } from '../../../../../ipos/src/modules/b/domain/b';",
   'apps/ipos/src/modules/b/domain/b.ts': 'export class B {}',
 }, root => assert.match(checkBoundaries(root).join('\n'), /CROSS_APP_IMPORT/)));
 

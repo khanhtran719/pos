@@ -43,6 +43,8 @@ services:
       DB_DATABASE: central
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      ACCESS_TOKEN_SECRET: local-central-access-token-secret-32-chars
+      REFRESH_TOKEN_SECRET: local-central-refresh-token-secret-32-chars
     ports:
       - "3000:3000"
     depends_on:
@@ -68,6 +70,8 @@ services:
       DB_DATABASE: ipos
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      ACCESS_TOKEN_SECRET: local-ipos-access-token-secret-32-characters
+      REFRESH_TOKEN_SECRET: local-ipos-refresh-token-secret-32-characters
     ports:
       - "3001:3001"
     depends_on:
@@ -93,6 +97,8 @@ services:
       DB_DATABASE: kpos
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      ACCESS_TOKEN_SECRET: local-kpos-access-token-secret-32-characters
+      REFRESH_TOKEN_SECRET: local-kpos-refresh-token-secret-32-characters
     ports:
       - "3002:3002"
     depends_on:

@@ -7,8 +7,8 @@ describe('validateEnvironment', () => {
     DB_PASSWORD: 'pos',
     DB_DATABASE: 'central',
     REDIS_HOST: 'localhost',
-    ACCESS_TOKEN_SECRET: 'access-secret',
-    REFRESH_TOKEN_SECRET: 'refresh-secret',
+    ACCESS_TOKEN_SECRET: 'access-secret-that-is-at-least-32-chars',
+    REFRESH_TOKEN_SECRET: 'refresh-secret-that-is-at-least-32-chars',
   };
 
   it('fills default port and app name', () => {
@@ -48,16 +48,34 @@ describe('validateEnvironment', () => {
     ).toThrow('Missing required environment variable ACCESS_TOKEN_SECRET');
   });
 
+  it('rejects authentication secrets shorter than 32 characters', () => {
+    expect(() =>
+      validateEnvironment({
+        ...complete,
+        ACCESS_TOKEN_SECRET: 'too-short',
+      }),
+    ).toThrow('ACCESS_TOKEN_SECRET must contain at least 32 characters');
+  });
+
+  it('rejects an invalid token expiry duration', () => {
+    expect(() =>
+      validateEnvironment({
+        ...complete,
+        ACCESS_TOKEN_EXPIRES_IN: 'later',
+      }),
+    ).toThrow('ACCESS_TOKEN_EXPIRES_IN must be a positive duration');
+  });
+
   it('uses standard token expiry defaults when optional values are absent', () => {
-    vi.stubEnv('ACCESS_TOKEN_SECRET', 'access-secret');
-    vi.stubEnv('REFRESH_TOKEN_SECRET', 'refresh-secret');
+    vi.stubEnv('ACCESS_TOKEN_SECRET', 'access-secret-that-is-at-least-32-chars');
+    vi.stubEnv('REFRESH_TOKEN_SECRET', 'refresh-secret-that-is-at-least-32-chars');
     vi.stubEnv('ACCESS_TOKEN_EXPIRES_IN', '');
     vi.stubEnv('REFRESH_TOKEN_EXPIRES_IN', '');
 
     expect(buildAuthConfig()).toEqual({
-      accessTokenSecret: 'access-secret',
+      accessTokenSecret: 'access-secret-that-is-at-least-32-chars',
       accessTokenExpiresIn: '15m',
-      refreshTokenSecret: 'refresh-secret',
+      refreshTokenSecret: 'refresh-secret-that-is-at-least-32-chars',
       refreshTokenExpiresIn: '7d',
     });
 

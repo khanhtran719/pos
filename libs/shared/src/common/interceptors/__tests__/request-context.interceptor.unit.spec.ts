@@ -53,6 +53,29 @@ describe('RequestContextInterceptor', () => {
     expect(seenContext?.requestId).toBeTruthy();
     expect(seenContext?.correlationId).toBe(seenContext?.requestId);
   });
+
+  it('adds the authenticated user to the request context', async () => {
+    const request = {
+      headers: {},
+      user: { userId: 'user-1', sessionId: 'session-1' },
+    } as unknown as Request;
+    const response = { setHeader: vi.fn() } as unknown as Response;
+    let seenContext: ReturnType<typeof RequestContext.current>;
+    const next: CallHandler = {
+      handle: () =>
+        new Observable((subscriber) => {
+          seenContext = RequestContext.current();
+          subscriber.next('ok');
+          subscriber.complete();
+        }),
+    };
+
+    await lastValueFrom(
+      new RequestContextInterceptor().intercept(httpContext(request, response), next),
+    );
+
+    expect(seenContext?.userId).toBe('user-1');
+  });
 });
 
 function httpContext(request: Request, response: Response): ExecutionContext {

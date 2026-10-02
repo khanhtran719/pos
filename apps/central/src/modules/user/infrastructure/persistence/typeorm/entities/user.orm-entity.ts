@@ -68,6 +68,7 @@ export class UserOrmEntity {
     type: 'varchar',
     length: 255,
     nullable: false,
+    select: false,
     comment: 'Mã bảo mật đã mã hóa',
   })
   pin!: string;
@@ -76,6 +77,7 @@ export class UserOrmEntity {
     name: 'Pass',
     type: 'text',
     nullable: false,
+    select: false,
     comment: 'Mật khẩu đã băm',
   })
   pass!: string;

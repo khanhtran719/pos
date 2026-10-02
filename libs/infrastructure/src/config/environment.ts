@@ -70,6 +70,17 @@ export function validateEnvironment(config: Record<string, unknown>): Record<str
   const redisPassword = optionalString(config.REDIS_PASSWORD);
   const accessTokenExpiresIn = optionalString(config.ACCESS_TOKEN_EXPIRES_IN);
   const refreshTokenExpiresIn = optionalString(config.REFRESH_TOKEN_EXPIRES_IN);
+  const accessTokenSecret = validateSecret(
+    (config.ACCESS_TOKEN_SECRET as string).trim(),
+    'ACCESS_TOKEN_SECRET',
+  );
+  const refreshTokenSecret = validateSecret(
+    (config.REFRESH_TOKEN_SECRET as string).trim(),
+    'REFRESH_TOKEN_SECRET',
+  );
+
+  validateDuration(accessTokenExpiresIn, 'ACCESS_TOKEN_EXPIRES_IN');
+  validateDuration(refreshTokenExpiresIn, 'REFRESH_TOKEN_EXPIRES_IN');
 
   return {
     ...config,
@@ -84,9 +95,9 @@ export function validateEnvironment(config: Record<string, unknown>): Record<str
     REDIS_HOST: (config.REDIS_HOST as string).trim(),
     REDIS_PORT: redisPort,
     REDIS_PASSWORD: redisPassword,
-    ACCESS_TOKEN_SECRET: (config.ACCESS_TOKEN_SECRET as string).trim(),
+    ACCESS_TOKEN_SECRET: accessTokenSecret,
     ACCESS_TOKEN_EXPIRES_IN: accessTokenExpiresIn,
-    REFRESH_TOKEN_SECRET: (config.REFRESH_TOKEN_SECRET as string).trim(),
+    REFRESH_TOKEN_SECRET: refreshTokenSecret,
     REFRESH_TOKEN_EXPIRES_IN: refreshTokenExpiresIn,
   };
 }
@@ -120,15 +131,40 @@ export function buildRedisConfig(): RedisEnvironment {
 }
 
 export function buildAuthConfig(): AuthEnvironment {
-  const accessTokenExpiresIn = process.env.ACCESS_TOKEN_EXPIRES_IN?.trim();
-  const refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN?.trim();
+  const accessTokenExpiresIn = optionalString(process.env.ACCESS_TOKEN_EXPIRES_IN);
+  const refreshTokenExpiresIn = optionalString(process.env.REFRESH_TOKEN_EXPIRES_IN);
+  const accessTokenSecret = validateSecret(
+    requiredProcessEnv('ACCESS_TOKEN_SECRET'),
+    'ACCESS_TOKEN_SECRET',
+  );
+  const refreshTokenSecret = validateSecret(
+    requiredProcessEnv('REFRESH_TOKEN_SECRET'),
+    'REFRESH_TOKEN_SECRET',
+  );
+
+  validateDuration(accessTokenExpiresIn, 'ACCESS_TOKEN_EXPIRES_IN');
+  validateDuration(refreshTokenExpiresIn, 'REFRESH_TOKEN_EXPIRES_IN');
 
   return {
-    accessTokenSecret: requiredProcessEnv('ACCESS_TOKEN_SECRET'),
+    accessTokenSecret,
     accessTokenExpiresIn: accessTokenExpiresIn || '15m',
-    refreshTokenSecret: requiredProcessEnv('REFRESH_TOKEN_SECRET'),
+    refreshTokenSecret,
     refreshTokenExpiresIn: refreshTokenExpiresIn || '7d',
   };
+}
+
+function validateSecret(value: string, name: string): string {
+  if (value.length < 32) {
+    throw new Error(`${name} must contain at least 32 characters`);
+  }
+
+  return value;
+}
+
+function validateDuration(value: string | undefined, name: string): void {
+  if (value !== undefined && !/^[1-9]\d*(?:ms|s|m|h|d|w|y)$/.test(value)) {
+    throw new Error(`${name} must be a positive duration such as 15m or 7d`);
+  }
 }
 
 function requiredProcessEnv(name: string): string {

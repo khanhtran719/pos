@@ -1020,6 +1020,8 @@ Database schema and API contract must remain independently evolvable.
 
 Domain errors must be transport-independent.
 
+Every client-visible domain/application error MUST declare a stable semantic category: `bad_input`, `unauthorized`, `forbidden`, `not_found`, `conflict`, `business_rule`, or `rate_limited`. Domain and Application code MUST NOT import HTTP status constants. Presentation owns the protocol mapping; the standard HTTP mapping is 400, 401, 403, 404, 409, 422, and 429 respectively.
+
 Example:
 
 ```ts

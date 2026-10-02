@@ -1,11 +1,11 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
 @Entity('Sessions')
 @Index(['userId'])
-@Index(['loginAt'])
-@Index(['userId', 'logoutAt'])
-export class SessionEntity {
-  @PrimaryGeneratedColumn('uuid', { name: 'ID', comment: 'Mã định danh chính' })
+@Index(['expiresAt'])
+@Index(['userId', 'revokedAt'])
+export class SessionOrmEntity {
+  @PrimaryColumn('uuid', { name: 'ID', comment: 'Mã định danh phiên' })
   id!: string;
 
   @Column({
@@ -17,35 +17,44 @@ export class SessionEntity {
   userId!: string;
 
   @Column({
-    name: 'AccessToken',
-    type: 'text',
+    name: 'RefreshTokenFingerprint',
+    type: 'varchar',
+    length: 64,
     nullable: false,
-    comment: 'Mã truy cập phiên',
+    comment: 'SHA-256 fingerprint của refresh token',
   })
-  accessToken!: string;
+  refreshTokenFingerprint!: string;
 
   @Column({
-    name: 'RefreshToken',
-    type: 'text',
-    nullable: false,
-    comment: 'Mã làm mới phiên',
-  })
-  refreshToken!: string;
-
-  @Column({
-    name: 'LoginAt',
-    type: 'timestamp without time zone',
+    name: 'CreatedAt',
+    type: 'timestamp with time zone',
     nullable: false,
     default: () => 'CURRENT_TIMESTAMP',
     comment: 'Thời điểm đăng nhập',
   })
-  loginAt!: Date;
+  createdAt!: Date;
 
   @Column({
-    name: 'LogoutAt',
-    type: 'timestamp without time zone',
+    name: 'ExpiresAt',
+    type: 'timestamp with time zone',
+    nullable: false,
+    comment: 'Thời điểm refresh token hết hạn',
+  })
+  expiresAt!: Date;
+
+  @Column({
+    name: 'RotatedAt',
+    type: 'timestamp with time zone',
+    nullable: true,
+    comment: 'Thời điểm refresh token gần nhất được xoay vòng',
+  })
+  rotatedAt!: Date | null;
+
+  @Column({
+    name: 'RevokedAt',
+    type: 'timestamp with time zone',
     nullable: true,
     comment: 'Thời điểm đăng xuất',
   })
-  logoutAt?: Date;
+  revokedAt!: Date | null;
 }
